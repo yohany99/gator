@@ -1,10 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/yohany99/gator/internal/config"
+	"github.com/yohany99/gator/internal/database"
 )
 
 func main() {
@@ -12,8 +15,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
+	db, err := sql.Open("postgres", cfg.DbURL)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+	dbQueries := database.New(db)
 	currState := state{
 		cfg: &cfg,
+		db:  dbQueries,
 	}
 	currCommands := commands{
 		commandMap: make(map[string]func(*state, command) error),
