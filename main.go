@@ -29,6 +29,8 @@ func main() {
 		commandMap: make(map[string]func(*state, command) error),
 	}
 	currCommands.register("login", handlerLogin)
+	currCommands.register("register", handlerRegister)
+	currCommands.register("reset", handlerReset)
 	if len(os.Args) < 2 {
 		fmt.Println("command is required")
 		os.Exit(0)
@@ -40,6 +42,7 @@ func main() {
 	err = currCommands.run(&currState, currCommand)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	// cfg, err := config.Read()
