@@ -31,9 +31,10 @@ func main() {
 	currCommands.register("login", handlerLogin)
 	currCommands.register("register", handlerRegister)
 	currCommands.register("reset", handlerReset)
+	currCommands.register("users", handlerUsers)
 	if len(os.Args) < 2 {
 		fmt.Println("command is required")
-		os.Exit(0)
+		os.Exit(1)
 	}
 	currCommand := command{
 		name: os.Args[1],

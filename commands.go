@@ -72,7 +72,10 @@ func handlerRegister(s *state, cmd command) error {
 	if err != nil {
 		return err
 	}
-	s.cfg.CurrentUserName = userParams.Name
+	err = s.cfg.SetUser(userParams.Name)
+	if err != nil {
+		return err
+	}
 	fmt.Printf("user created: %+v\n", user)
 	return nil
 }
@@ -81,6 +84,22 @@ func handlerReset(s *state, cmd command) error {
 	err := s.db.ResetDB(context.Background())
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return err
+	}
+	for _, user := range users {
+		if s.cfg.CurrentUserName == user.Name {
+			fmt.Println("* ", user.Name, "(current)")
+		} else {
+			fmt.Println("* ", user.Name)
+		}
+
 	}
 	return nil
 }
