@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/xml"
+	"html"
 	"io"
 	"net/http"
 	"time"
@@ -24,18 +26,34 @@ type RSSItem struct {
 }
 
 func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
-	request, error := http.NewRequestWithContext(ctx, "GET", feedURL, nil)
-	if error != nil {
-		return nil, error
+	request, err := http.NewRequestWithContext(ctx, "GET", feedURL, nil)
+	if err != nil {
+		return nil, err
 	}
 	request.Header.Set("User-Agent", "gator")
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	response, error := client.Do(request)
-	if error != nil {
-		return nil, error
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
 	}
-	io.ReadAll(response)
-	return nil, nil
+	defer response.Body.Close()
+	bodyBytes, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	var rssfeed RSSFeed
+	err = xml.Unmarshal(bodyBytes, &rssfeed)
+	if err != nil {
+		return nil, err
+	}
+	rssfeed.Channel.Title = html.UnescapeString(rssfeed.Channel.Title)
+	rssfeed.Channel.Description = html.UnescapeString(rssfeed.Channel.Description)
+	for i := range rssfeed.Channel.Item {
+		item := &rssfeed.Channel.Item[i]
+		item.Title = html.UnescapeString(item.Title)
+		item.Description = html.UnescapeString(item.Description)
+	}
+	return &rssfeed, nil
 }
