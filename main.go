@@ -34,6 +34,7 @@ func main() {
 	currCommands.register("users", handlerUsers)
 	currCommands.register("agg", handlerAgg)
 	currCommands.register("addfeed", handlerAddFeed)
+	currCommands.register("feeds", handlerFeeds)
 	if len(os.Args) < 2 {
 		fmt.Println("command is required")
 		os.Exit(1)
