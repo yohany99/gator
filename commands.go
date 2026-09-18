@@ -158,3 +158,12 @@ func handlerFeeds(s *state, cmd command) error {
 	}
 	return nil
 }
+
+func handlerFollow(s *state, cmd command) error {
+	if len(cmd.args) > 1 {
+		return errors.New("only one url required")
+	}
+	url := cmd.args[0]
+	s.db.CreateFeedFollow()
+	return nil
+}
