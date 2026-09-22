@@ -160,10 +160,31 @@ func handlerFeeds(s *state, cmd command) error {
 }
 
 func handlerFollow(s *state, cmd command) error {
-	if len(cmd.args) > 1 {
+	if len(cmd.args) != 1 {
 		return errors.New("only one url required")
 	}
 	url := cmd.args[0]
-	s.db.CreateFeedFollow()
+	feed, err := s.db.GetFeedByURL(context.Background(), url)
+	if err != nil {
+		return err
+	}
+	//easier way to get user?
+	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+	if err != nil {
+		return err
+	}
+	feedFollowParams := database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	}
+	feedFollowRow, err := s.db.CreateFeedFollow(context.Background(), feedFollowParams)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Feed name: %s\n", feedFollowRow.FeedName)
+	fmt.Printf("Current user: %s\n", user.Name)
 	return nil
 }
