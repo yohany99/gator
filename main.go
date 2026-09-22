@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -10,14 +10,19 @@ import (
 	"github.com/yohany99/gator/internal/database"
 )
 
+type state struct {
+	cfg *config.Config
+	db  *database.Queries
+}
+
 func main() {
 	cfg, err := config.Read()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("error reading config: %v", err)
 	}
 	db, err := sql.Open("postgres", cfg.DbURL)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("error connecting to db: %v", err)
 	}
 	defer db.Close()
 	dbQueries := database.New(db)
@@ -38,8 +43,7 @@ func main() {
 	currCommands.register("follow", handlerFollow)
 	currCommands.register("following", handlerFollowing)
 	if len(os.Args) < 2 {
-		fmt.Println("command is required")
-		os.Exit(1)
+		log.Fatal("usage: cli <command> [args...]")
 	}
 	currCommand := command{
 		name: os.Args[1],
@@ -47,8 +51,7 @@ func main() {
 	}
 	err = currCommands.run(&currState, currCommand)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	// cfg, err := config.Read()

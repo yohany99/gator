@@ -106,17 +106,3 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
 	}
 	return items, nil
 }
-
-const getUserNameByFeedUserID = `-- name: GetUserNameByFeedUserID :one
-SELECT users.name
-FROM users
-JOIN feeds ON feeds.user_id = users.id
-WHERE feeds.user_id = $1
-`
-
-func (q *Queries) GetUserNameByFeedUserID(ctx context.Context, userID uuid.UUID) (string, error) {
-	row := q.db.QueryRowContext(ctx, getUserNameByFeedUserID, userID)
-	var name string
-	err := row.Scan(&name)
-	return name, err
-}
