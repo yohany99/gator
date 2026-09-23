@@ -107,13 +107,9 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) != 2 {
 		return fmt.Errorf("usage: %s <name> <url>", cmd.name)
-	}
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
 	}
 	feedParams := database.CreateFeedParams{
 		ID:        uuid.New(),
@@ -171,7 +167,7 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) != 1 {
 		return fmt.Errorf("usage: %s <feed_url>", cmd.name)
 	}
@@ -179,10 +175,6 @@ func handlerFollow(s *state, cmd command) error {
 	feed, err := s.db.GetFeedByURL(context.Background(), url)
 	if err != nil {
 		return fmt.Errorf("couldn't get feed: %w", err)
-	}
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
 	}
 	feedFollowParams := database.CreateFeedFollowParams{
 		ID:        uuid.New(),
@@ -200,13 +192,9 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
+func handlerFollowing(s *state, cmd command, user database.User) error {
 	if len(cmd.args) > 0 {
 		return errors.New("no arguments required")
-	}
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
 	}
 	feedFollows, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {

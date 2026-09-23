@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
 
@@ -16,6 +18,16 @@ type state struct {
 }
 
 func main() {
+	// cfg, err := config.Read()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// cfg.SetUser("Yohan")
+	// cfg, err = config.Read()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(cfg)
 	cfg, err := config.Read()
 	if err != nil {
 		log.Fatalf("error reading config: %v", err)
@@ -38,10 +50,10 @@ func main() {
 	currCommands.register("reset", handlerReset)
 	currCommands.register("users", handlerUsers)
 	currCommands.register("agg", handlerAgg)
-	currCommands.register("addfeed", handlerAddFeed)
+	currCommands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 	currCommands.register("feeds", handlerFeeds)
-	currCommands.register("follow", handlerFollow)
-	currCommands.register("following", handlerFollowing)
+	currCommands.register("follow", middlewareLoggedIn(handlerFollow))
+	currCommands.register("following", middlewareLoggedIn(handlerFollowing))
 	if len(os.Args) < 2 {
 		log.Fatal("usage: cli <command> [args...]")
 	}
@@ -53,15 +65,22 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
 
-	// cfg, err := config.Read()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// cfg.SetUser("Yohan")
-	// cfg, err = config.Read()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(cfg)
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, cmd command) error {
+		user, err := getLoggedInUser(s)
+		if err != nil {
+			return err
+		}
+		return handler(s, cmd, *user)
+	}
+}
+
+func getLoggedInUser(s *state) (*database.User, error) {
+	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get user: %w", err)
+	}
+	return &user, nil
 }
