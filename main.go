@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 
@@ -69,18 +68,10 @@ func main() {
 
 func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
 	return func(s *state, cmd command) error {
-		user, err := getLoggedInUser(s)
+		user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
 		if err != nil {
 			return err
 		}
-		return handler(s, cmd, *user)
+		return handler(s, cmd, user)
 	}
-}
-
-func getLoggedInUser(s *state) (*database.User, error) {
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't get user: %w", err)
-	}
-	return &user, nil
 }
